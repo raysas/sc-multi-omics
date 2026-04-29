@@ -16,8 +16,9 @@ _memo for single cell multi-omics data and methods; this is a work in progress f
 
 **Readings**:
 - [x] [Single-cell sequencing techniques from individual to multiomics analyses](https://www.nature.com/articles/s12276-020-00499-2)
-- [ ] [The technological landscape and applications of single-cell multi-omics](https://www.nature.com/articles/s41580-023-00615-w)
-- [ ] [Considerations for building and using integrated single-cell atlases](https://www.nature.com/articles/s41592-024-02532-y)
+- [x] [The technological landscape and applications of single-cell multi-omics](https://www.nature.com/articles/s41580-023-00615-w)
+- [x] [Considerations for building and using integrated single-cell atlases](https://www.nature.com/articles/s41592-024-02532-y)
+- [x] [SCANPY: large-scale single-cell gene expression data analysis](https://link.springer.com/article/10.1186/s13059-017-1382-0)
 
 ### super brief history of single cell
 
@@ -71,7 +72,8 @@ Preprocessing might actually be dataset-specific. Gene selection is crucial to i
 ## Trajectory Inference
 
 **Readings**:
-- [ ] [Computational methods for trajectory inference from single-cell transcriptomics](https://onlinelibrary.wiley.com/doi/full/10.1002/eji.201646347)
+- [x] [Computational methods for trajectory inference from single-cell transcriptomics](https://onlinelibrary.wiley.com/doi/full/10.1002/eji.201646347)  
+- [x] [Trajectory Inference for Single Cell Omics](https://share.google/OD72D1lYjvyhyOFHB)
 
 *What's a cellular trajectory?*  
 An important starting-point question to understand the context by which this problem is posed.   
@@ -82,19 +84,84 @@ $$\text{stem} \rightarrow \text{intermediate} \rightarrow \text{specialized}$$
 
 Trajectory inference is the problem of inferring this trajectory from single cell data. It's a problem that has often been translted into a graph or tree computational problem. Pathfinding algorithms are employed to find the trajectories accross the cells (nodes).
 
+### Key concepts
+
 **Pseudotime**: "numerical value showing how far a particular cell is in a dynamic process"  
 (numerical value) measurement of the cell's position in a trajectory (u.a.). As it's not an actual time, _pseudo_, it's about finding a relative ordering to check how far along the trajectory a cell is. Its notion is super useeful to understand the dynamics of the process: its about ordering the cells to define the different developmental/differentiation stages.
 
+When we re talking about relative position, one might add the notion of a reference state. If we take the differentiation example, this would be the stem cell giving rise to branching progenitor states.
 
-*Stricture of the dynamic process*  
-- linear
-- non-linear (branching - pretty common, or even cyclic)
-cyclic might come in handy for cell cycle but is quite difficult to infer
+**Assumption** (because its statistical learning at the end): enough cells are sequenced to capture the entire trajectory.
 
 Cutting down the talk - ideas are nice but how is this really done?  
-The TI process boils down mainly to 2 steps: dimensionality reduction and trajectory modelling  
+The TI process boils down mainly to 2 steps: dimensionality reduction and trajectory modelling. The trajectory can take many shapes and forms, and different methods provie frameworks that accomodate for different settings
+
+### Structure
+
+*Structure of the dynamic process*  
+- linear
+- non-linear 
+
+Linear are pretty simple: starting from a reference state, the cells differentiate into a single lineage
+
+```mermaid
+graph LR
+A((uno)) --> B((dos))
+B --> C((tres))
+```
+
+Branching is a bit more complex, but quite realsitic when talking about differentiation. From a reference state known as the stem cell, the cells differentiate into multiple lineages or cell types, and that;s usually through many intermediates to reach the specialized cells at the end.
+
+```mermaid
+graph LR
+A((stem cell)) --> B((progenitor 1))
+A --> C((progenitor 2))
+B --> D((specialized 1))
+C --> E((specialized 2))
+C --> F((specialized 3))
+```
+
+Circular is one non-linear structure, that is more rare, even harder to model, but is observed in cases like cell cycle
+
+
+### Dimensionalty Reduction
+
 Starting off with high-dimensional data DR is used to reduce dimensionality and noise (great at capturing the main signal). Often times they talk about DR, clustering and graph stuff here.  
-Next, trajectory inference is initiated on this reduced space particularly, though projecting cells into thir place along the trajectory
+
+Linear (PCA) and non linear DR techniques (t-SNE, UMAP). It's more often to find non-linear ones used for single cell data, in fact, it's even common to perform a DR like t-SNE on the PCA space.  
+When one tries PCA on single cell, and unlike bulk, the % of variance explained is super super low, it usually requires 30-40 PCS to cover 80-90% of it (mainly because the data is noisy and sparse). So often times, some works take the first n components that expalin x% of the variance (liek 90%) and then perform a non-linear DR on top of that.  
+
+> [!NOTE]
+> t-SNE is a manifold learning technique, mathematically, first it computes pairwise similarities between the data points in the original space, then it defines a similar probability distribution in the low-dimensional space and minimizes the Kullback-Leibler divergence between the two distributions. It is particularly good at preserving local structure, meaning that it tends to cluster similar data points together in the low-dimensional space
+
+> note to rayane: mention the formulas from the manifol learning video
+
+After that, usually the clusters are identified.
+
+Graph-based methods tsart by defining a graph where the nodes are the cells and the edges represent similarities between them. The graph is then used to identify clusters of similar cells, which can be thought of as different cell types or states. 
+
+### Trajectory Modelling
+
+
+Next, trajectory inference is initiated on this reduced space particularly, though projecting cells into thir place along the trajectory.
+
+The graph can also be used to infer trajectories by finding paths through the graph that connect different clusters. 
+This is assimilated to a pathfinding problem, where, starting from one vertex (a reference state), we want to find the path that connects it to other vertices
+
+### Methods
+
+Lineage? Fate?
+
+
+
+A loooot of methods have been advanced for TI for different purposes
+
+Monocle: computes MST
+This method presented some issues regarding its robustness, while other methods relying on a "principle curve" are generally more stable (in computing pseudotime). 
+In any case, Slingshot offered an enhacement by computing MST of clusters, then connecting all trajevtpries together with thr principle curve. This way the main curve is robust while branching lineage have a degree of flexibility. 
+Pseudotime is calculated by a projection against the principle curve.
+
+## Gene Regulatory Networks
 
 ## Multi-Omics Methodologies
 
