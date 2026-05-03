@@ -1,14 +1,15 @@
-# sc-multi-omics
+# sc-multi-omics 
 
 _memo for single cell multi-omics data and methods; this is a work in progress focusing on single-cell in single omics across different omics layers as well as multi-omics methods and applications, starting at laymen terms in the hopes of building up towards complex notions in the field_
 
 > ✨ "fine.. I'll do it myself" - Thanos
-<!-- 🔷🔴🟨🟢🟪🔶 -->
+<!-- > ............. 🔷🔴🟨🟢🟪🔶 ........... -->
 
 ## Table of Contents
 
 - [Context: sc-omics](#context-sc-omics)
 - [Trajectory Inference](#trajectory-inference)
+- [Gene Regulatory Networks](#gene-regulatory-networks)
 - [Multi-Omics Methodologies](#multi-omics-methodologies)
 
 
@@ -30,7 +31,8 @@ What makes cells different is the way they use their genome, that is, the way th
 
 Once upon a time there was bulk sequencing, technology giving birth to high throughput sequncing in transcriptomics - with respect to the CGH micro-array *not-too-convenient* counterpart.
 Bulk RNA-seq represents the _average_ quantity of RNA molecules in a sample where the word "bulk" refers to the fact that the sample (most of the times, a patient) is made of many cells, and the sequencing is performed on the whole sample. Thus the quantification is really an avergae expression of genes accross all the cells.
-This has been an outstanding technology leveraging the world of transcriptomics and was mainly used in differential analysis of expression between conditions (e.g., healthy vs disease). But it also has some limitations, most importantly it's low resolution in depicting the heterogeneity of the sample, that is, expression differences between cells.
+This has been an outstanding technology leveraging the world of transcriptomics and was mainly used in differential analysis of expression between conditions (e.g., healthy vs disease). But it also has some limitations, most importantly it's low resolution in depicting the heterogeneity of the sample, that is, expression differences between cells. 
+The only way to go around this at a time was thorugh deconvolution given *a priori* cell knowledge - that is the process of inferreing cell type from a bulk sample - and it wasnt the perfect and most accurate solution.
 
 That was until 2009, when single-cell RNA-seq saw the light, enabling gene expression quantification at single cell resolution. scRNA-seq was named method of the year by Nature Methods in 2013, and since then a plethora of single cell technologies have been developed, namely in epigenomics, proteomics amongs others.
 
@@ -38,13 +40,15 @@ That was until 2009, when single-cell RNA-seq saw the light, enabling gene expre
 
 Regardless of the ever increasing number of datasets and applications done so far in scRNA-seq, the technology did not drop out of the sky. It's the outcome of a long series of developments to reach the current state that is less error prone, more scalable and affordable.
 
-In comparison to bulk RNA-seq, sc has a necessary step called "cell dissociation" or cell isolation. Consisting of seperating cells from the tissue, it allows to subsequently capture and sequenece the cellular RNA.
+In comparison to bulk RNA-seq, sc has a necessary step called "cell dissociation" or cell isolation. Consisting of seperating cells from the tissue or a heterogeneous mix of cells, it allows to subsequently capture and sequenece the cellular RNA.
 To measure the transcriptome, similarly to bulk this step consists of reverse transcribing the RNA into cDNA and amplifying it before sequencing.
 
 Several families of methods are availble, oen of which is `Smart-seq` (+ extensions methods) that is a whole-transccriptome amplification (WTA) method. As the name suggests it allows for full length cDNA amplification and hence whole transcriptomce sequencing. However, it is challenging in a sense it's hard to accomodate for a large number of cells and is naturally more expensive for having to sequence the whole transcriptome.
 
 On the other hand, more scalable methods are "droplet-based" for their reliance on microfluidic droplets to capture and sequence the RNA of a large number of cells. Unlike WTA approaches, they rely on 3'end sequencing (only sequence the 3' end of the transcript). Why? It's mainly because of the polyA tail:
 As the mature mRNA is polyadenulated (ends with AAAAAAAAAA- at the 3' end of the sequence), first there's capture of mRNA molecule through an oligo-dT primer (a TTTTT- primer), then reverse transcription starting there allowing for the capture of the 3' end. The other end however is not captured - and hence the name 3' end sequencing and hence the reason why it's not a WTA method.  It is much more convenient to sequence a large number of cells, cost effective. Not without limitations, it usually present a higher dropout rate, lower RT efficiency and higher amplification bias.
+
+While this have largely affected the biological conclusions to be drawn from data, its worth remembering that scRNAseq works soleley on differences in gene expression, and that alone is not enough to capture the full cellular state. Thus the need goes beyond to multi-omics capturing different layers of information.
 
 ### scATAC-seq
 
@@ -128,6 +132,11 @@ Circular is one non-linear structure, that is more rare, even harder to model, b
 
 Starting off with high-dimensional data DR is used to reduce dimensionality and noise (great at capturing the main signal). Often times they talk about DR, clustering and graph stuff here.  
 
+|  | cell 1 | cell 2 |     
+|-------|-------|-------|
+| gene 1 | | | |
+| gene 2 | | | |
+
 Linear (PCA) and non linear DR techniques (t-SNE, UMAP). It's more often to find non-linear ones used for single cell data, in fact, it's even common to perform a DR like t-SNE on the PCA space.  
 When one tries PCA on single cell, and unlike bulk, the % of variance explained is super super low, it usually requires 30-40 PCS to cover 80-90% of it (mainly because the data is noisy and sparse). So often times, some works take the first n components that expalin x% of the variance (liek 90%) and then perform a non-linear DR on top of that.  
 
@@ -163,8 +172,40 @@ Pseudotime is calculated by a projection against the principle curve.
 
 ## Gene Regulatory Networks
 
+**Readings**:  
+- [ ] [Graph representation learning for single-cell biology](https://www.sciencedirect.com/science/article/pii/S2452310021000329)
+
+
 ## Multi-Omics Methodologies
 
+
 **Readings**:
-- [ ] [Biological Multi-Layer and Single Cell Network-Based Multiomics Models-a Review](https://arxiv.org/abs/2503.09568)
+- [x] [Biological Multi-Layer and Single Cell Network-Based Multiomics Models-a Review](https://arxiv.org/abs/2503.09568)
 - [ ] [Multi-omics integration in the age of million single-cell data](https://www.nature.com/articles/s41581-021-00463-x)
+
+There has been a good amount of research for intergrating multi-omics data, it's harder to apply the same methodologies to perform the same task for single cell.
+
+### Network-based
+
+The vanilla network we all know is the single layer homogeneous network, that is a graph where nodes are of the same type and edges represent the same type of relationship. Things are leveraged to a higher order of complexity when we talk about multi-omics, defining new levels of heterogeneous graphs:
+- multiplex network: same type of node but different edges between entities
+- multilayer network: different types of nodes and edges  
+
+Similar to clustering and TI approaches, starting from a genex x cells matrix, each cell can be represented in reduced space and clustered among a population of cells. This common step often used in single cell to construct a graph where the nodes are the cells and in here the edges can be based on proximity of these cells in latent space.
+Another network, a cell type specific gene interaction network is defined. As previously known in approaches like WGCN, gene interactions can be defined by a simple correlation and a thresholding strategy to establish a link between 2 nodes based on similarity in expression profiles (guilt by association). 
+At this scale this would create a network (cell-cell communication) of networks (gene interactions).
+
+integration of multi-layered networks comes in different types, but first off there is the notion of an anchor: the constant element accross the layers to enable integration:
+
+- _horizontal_: genes are anchors -- accross multiple $G \times C$ matrices, the genes are the same, but the cells are different (intergating across different cell batches - batch effect correction)
+<p align='center'>
+<img src='./assets/horizontal.png'>
+</p>
+
+- _vertical_: anchoring columns across different modalities, a key factor here is to have matching cell identities accross the omics layers (more what we were looking for in the context of multi-omics integration)
+<p align='center'>
+<img src='./assets/vertical.png'>
+</p>
+
+- _diagonal_ and _mosaic_: no anchors - much more complex integration (will be visited later)
+
